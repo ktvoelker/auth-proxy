@@ -13,8 +13,9 @@ data T = Config
   , proxyPort       :: Int
   , postmarkKey     :: Text
   , postmarkSender  :: Text
-  , authSecret      :: Text
-  , authEmailDomain :: Text
+  , authCookie      :: ByteString
+  , authKeyFile     :: FilePath
+  , authEmailDomain :: ByteString
   , authTitle       :: Text
   } deriving (Eq, Ord)
 
@@ -29,8 +30,9 @@ instance FromJSON T where
       <*> v ..: ("proxy", "port")
       <*> v ..: ("postmark", "key")
       <*> v ..: ("postmark", "sender")
-      <*> v ..: ("authentication", "secret")
-      <*> v ..: ("authentication", "email-domain")
+      <*> fmap encodeUtf8 (v ..: ("authentication", "cookie"))
+      <*> v ..: ("authentication", "key-file")
+      <*> fmap encodeUtf8 (v ..: ("authentication", "email-domain"))
       <*> v ..: ("authentication", "title")
 
 load :: FilePath -> IO T

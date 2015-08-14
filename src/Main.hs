@@ -7,7 +7,6 @@ import System.IO
 
 import qualified Authenticate
 import qualified Config
-import HTML
 import Network.Wai
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Proxy
@@ -23,8 +22,9 @@ main = getArgs >>= \case
     exitFailure
 
 app :: Config.T -> Application
-app config req =
-  if Session.authenticated config req
-  then Proxy.app config req
-  else Authenticate.app config req
+app config req respond = do
+  key <- Session.loadKey config
+  if Session.authenticated config key req
+  then Proxy.app config req respond
+  else Authenticate.app config key req respond
 

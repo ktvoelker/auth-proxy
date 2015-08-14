@@ -2,8 +2,6 @@
 TODO
 ====
 
-Write the logic to check the client's cookie
-
 Write the endpoint to handle generating an access code and sending an email
 
   Don't bother sending an email yet; just log the access URI so it can be tested

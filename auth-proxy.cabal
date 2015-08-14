@@ -17,13 +17,18 @@ executable auth-proxy
   hs-source-dirs:      src
   main-is:             Main.hs
   other-modules:
+    Authenticate
     Config
     HTML
     Paths_auth_proxy
+    Proxy
+    Session
   build-depends:
     base >= 4.8 && < 4.9,
     bytestring,
     clientsession,
+    cookie,
+    email-validate,
     http-client,
     http-reverse-proxy,
     http-types,
