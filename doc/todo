@@ -1,0 +1,16 @@
+
+TODO
+====
+
+Write a config parser
+
+Write the logic to check the client's cookie and proxy the request if valid
+
+Write the static login page
+
+Write the endpoint to handle generating an access code and sending an email
+
+  Don't bother sending an email yet; just log the access URI so it can be tested
+
+Write the endpoint linked to by the email
+

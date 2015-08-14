@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Login to __TITLE__</title>
+  </head>
+  <body>
+    <h1>Login to __TITLE__</h1>
+    <form action="/login" method="POST">
+      <input type="hidden" name="token" value="__TOKEN__">
+      <p>
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email">
+      </p>
+      <p>
+        <input type="submit" value="Login">
+      </p>
+    </form>
+  </body>
+</html>
