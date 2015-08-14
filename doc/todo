@@ -2,9 +2,7 @@
 TODO
 ====
 
-Write the logic to check the client's cookie and proxy the request if valid
-
-Write the static login page
+Write the logic to check the client's cookie
 
 Write the endpoint to handle generating an access code and sending an email
 

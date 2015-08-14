@@ -2,11 +2,14 @@
 module Config (T(..), load) where
 
 import Control.Monad
+import Data.ByteString
 import Data.Text
+import Data.Text.Encoding
 import Data.Yaml
 
 data T = Config
-  { proxyHost       :: Text
+  { serverPort      :: Int
+  , proxyHost       :: ByteString
   , proxyPort       :: Int
   , postmarkKey     :: Text
   , postmarkSender  :: Text
@@ -21,7 +24,8 @@ data T = Config
 instance FromJSON T where
   parseJSON (Object v) =
     Config
-      <$> v ..: ("proxy", "host")
+      <$> v ..: ("server", "port")
+      <*> fmap encodeUtf8 (v ..: ("proxy", "host"))
       <*> v ..: ("proxy", "port")
       <*> v ..: ("postmark", "key")
       <*> v ..: ("postmark", "sender")

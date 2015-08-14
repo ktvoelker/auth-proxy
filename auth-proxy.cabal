@@ -22,12 +22,16 @@ executable auth-proxy
     Paths_auth_proxy
   build-depends:
     base >= 4.8 && < 4.9,
-    text,
+    bytestring,
     clientsession,
+    http-client,
     http-reverse-proxy,
-    warp,
-    waitra,
+    http-types,
     regex-applicative,
+    text,
+    wai,
+    waitra,
+    warp,
     wreq,
     yaml
   default-language:    Haskell2010
