@@ -8,3 +8,5 @@ Write the endpoint to handle generating an access code and sending an email
 
 Write the endpoint linked to by the email
 
+Add /login/check and /logout routes to the authenticated branch
+
