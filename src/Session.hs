@@ -10,6 +10,7 @@ import qualified Data.Text as T
 import Data.Time.Clock
 import Network.HTTP.Types
 import Network.Wai
+import System.Random
 import System.Random.TF
 import Text.Email.Validate
 import qualified Web.ClientSession as CS
@@ -37,8 +38,11 @@ get c key req =
   >>= CS.decrypt key
   >>= decode . fromStrict
 
+tokenLength :: Int
+tokenLength = 128
+
 newToken :: IO T.Text
-newToken = undefined
+newToken = T.pack . take tokenLength . randomRs ('A', 'Z') <$> newStdGen
 
 setCookie :: ByteString -> ByteString -> Header
 setCookie n v =

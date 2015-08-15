@@ -33,6 +33,7 @@ executable auth-proxy
     http-client,
     http-reverse-proxy,
     http-types,
+    random,
     regex-applicative,
     text,
     tf-random,
