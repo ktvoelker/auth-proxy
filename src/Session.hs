@@ -1,5 +1,5 @@
 
-module Session (T(..), loadKey, authenticated, get, new, setCookie) where
+module Session (T(..), loadKey, authenticated, get, new, setCookie, emailOK) where
 
 import Data.Aeson
 import Data.ByteString (ByteString)
@@ -28,10 +28,11 @@ parseRequestCookies =
   . filter ((== hCookie) . fst)
   . requestHeaders
 
+emailOK :: Config.T -> EmailAddress -> Bool
+emailOK c = (== Config.authEmailDomain c) . domainPart
+
 authenticated :: Config.T -> CS.Key -> Request -> Bool
-authenticated c key req =
-  (fmap domainPart $ get c key req >>= verifiedEmail)
-  == Just (Config.authEmailDomain c)
+authenticated c key req = maybe False (emailOK c) $ get c key req >>= verifiedEmail
 
 get :: Config.T -> CS.Key -> Request -> Maybe T
 get c key req =

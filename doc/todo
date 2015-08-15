@@ -2,11 +2,9 @@
 TODO
 ====
 
-Write the endpoint to handle generating an access code and sending an email
-
-  Don't bother sending an email yet; just log the access URI so it can be tested
-
 Write the endpoint linked to by the email
+
+Actually send the email
 
 Add /check-login and /logout routes to the authenticated branch
 

@@ -1,14 +1,16 @@
 
 module Main where
 
+import Network.HTTP.Types
+import Network.Wai
+import Network.Waitra
+import qualified Network.Wai.Handler.Warp as Warp
 import System.Environment
 import System.Exit
 import System.IO
 
 import qualified Authenticate
 import qualified Config
-import Network.Wai
-import qualified Network.Wai.Handler.Warp as Warp
 import qualified Proxy
 import qualified Session
 
@@ -22,9 +24,17 @@ main = getArgs >>= \case
     exitFailure
 
 app :: Config.T -> Application
-app config req respond = do
+app = waitraMiddleware routes . authApp
+
+authApp :: Config.T -> Application
+authApp config req respond = do
   key <- Session.loadKey config
   if Session.authenticated config key req
   then Proxy.app config req respond
   else Authenticate.app config key req respond
+
+routes :: [Route]
+routes =
+  [ simpleGet "/favicon.ico" $ const ($ responseLBS status404 [] "")
+  ]
 
