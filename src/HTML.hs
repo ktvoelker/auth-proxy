@@ -8,13 +8,14 @@ import Prelude hiding (readFile)
 
 import Paths_auth_proxy
 
-loginTemplatePath :: IO FilePath
-loginTemplatePath = getDataFileName "login.html"
+login :: IO FilePath
+login = getDataFileName "login.html"
 
-fillTemplate :: [(Text, Text)] -> FilePath -> IO Text
-fillTemplate args fp = fillTemplateText args <$> readFile fp
+render :: [(Text, Text)] -> FilePath -> IO Text
+render args fp = renderText args <$> readFile fp
 
-fillTemplateText :: [(Text, Text)] -> Text -> Text
-fillTemplateText args xs = foldl f xs args
+renderText :: [(Text, Text)] -> Text -> Text
+renderText args xs = foldl f xs args
   where
     f xs (key, val) = T.replace key val xs
+

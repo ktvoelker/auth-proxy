@@ -1,17 +1,25 @@
 
-module Session (loadKey, authenticated) where
+module Session (T(..), loadKey, authenticated, get, new) where
 
+import Data.Aeson
 import Data.ByteString (ByteString)
+import Data.ByteString.Builder (toLazyByteString)
+import Data.ByteString.Lazy (fromStrict, toStrict)
+import Data.Maybe
+import qualified Data.Text as T
+import Data.Time.Clock
 import Network.HTTP.Types
 import Network.Wai
+import System.Random.TF
 import Text.Email.Validate
-import Web.ClientSession
+import qualified Web.ClientSession as CS
 import Web.Cookie
 
 import qualified Config
+import Session.Types
 
-loadKey :: Config.T -> IO Key
-loadKey = getKey . Config.authKeyFile
+loadKey :: Config.T -> IO CS.Key
+loadKey = CS.getKey . Config.authKeyFile
 
 parseRequestCookies :: Request -> [(ByteString, ByteString)]
 parseRequestCookies =
@@ -19,14 +27,31 @@ parseRequestCookies =
   . filter ((== hCookie) . fst)
   . requestHeaders
 
-authenticated :: Config.T -> Key -> Request -> Bool
-authenticated c key req = sessionDomain == Just (Config.authEmailDomain c)
-  where
-    sessionDomain =
-      lookup (Config.authCookie c) (parseRequestCookies req)
-      >>= decrypt key
-      >>= emailDomain
+authenticated :: Config.T -> CS.Key -> Request -> Bool
+authenticated c key req =
+  (fmap domainPart $ get c key req >>= email) == Just (Config.authEmailDomain c)
 
-emailDomain :: ByteString -> Maybe ByteString
-emailDomain = fmap domainPart . emailAddress
+get :: Config.T -> CS.Key -> Request -> Maybe T
+get c key req =
+  lookup (Config.authCookie c) (parseRequestCookies req)
+  >>= CS.decrypt key
+  >>= decode . fromStrict
+
+newToken :: IO T.Text
+newToken = undefined
+
+setCookie :: ByteString -> ByteString -> Header
+setCookie n v =
+  ( "Set-Cookie"
+  , toStrict
+    . toLazyByteString
+    . renderSetCookie
+    $ def { setCookieName = n, setCookieValue = v, setCookieHttpOnly = True }
+  )
+
+new :: Config.T -> CS.Key -> IO (T, [Header])
+new c k = do
+  session <- Session <$> pure Nothing <*> getCurrentTime <*> newToken
+  cookieBytes <- CS.encryptIO k . toStrict $ encode session
+  return (session, [setCookie (Config.authCookie c) cookieBytes])
 

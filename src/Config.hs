@@ -11,6 +11,7 @@ data T = Config
   { serverPort      :: Int
   , proxyHost       :: ByteString
   , proxyPort       :: Int
+  , proxyKeyFile    :: FilePath
   , postmarkKey     :: Text
   , postmarkSender  :: Text
   , authCookie      :: ByteString
@@ -28,6 +29,7 @@ instance FromJSON T where
       <$> v ..: ("server", "port")
       <*> fmap encodeUtf8 (v ..: ("proxy", "host"))
       <*> v ..: ("proxy", "port")
+      <*> v ..: ("proxy", "key-file")
       <*> v ..: ("postmark", "key")
       <*> v ..: ("postmark", "sender")
       <*> fmap encodeUtf8 (v ..: ("authentication", "cookie"))

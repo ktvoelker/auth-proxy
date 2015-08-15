@@ -8,5 +8,9 @@ Write the endpoint to handle generating an access code and sending an email
 
 Write the endpoint linked to by the email
 
-Add /login/check and /logout routes to the authenticated branch
+Add /check-login and /logout routes to the authenticated branch
+
+Add a signed header when proxying that indicates the client's verified email
+
+Set the secure bit on the client cookie
 
