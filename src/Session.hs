@@ -1,5 +1,5 @@
 
-module Session (T(..), loadKey, authenticated, get, new) where
+module Session (T(..), loadKey, authenticated, get, new, setCookie) where
 
 import Data.Aeson
 import Data.ByteString (ByteString)
@@ -30,7 +30,8 @@ parseRequestCookies =
 
 authenticated :: Config.T -> CS.Key -> Request -> Bool
 authenticated c key req =
-  (fmap domainPart $ get c key req >>= email) == Just (Config.authEmailDomain c)
+  (fmap domainPart $ get c key req >>= verifiedEmail)
+  == Just (Config.authEmailDomain c)
 
 get :: Config.T -> CS.Key -> Request -> Maybe T
 get c key req =
@@ -38,24 +39,21 @@ get c key req =
   >>= CS.decrypt key
   >>= decode . fromStrict
 
-tokenLength :: Int
-tokenLength = 128
+setCookie :: Config.T -> CS.Key -> T -> IO Header
+setCookie c k session = do
+  bytes <- CS.encryptIO k . toStrict $ encode session
+  return
+    $ ( "Set-Cookie"
+      , toStrict
+        . toLazyByteString
+        . renderSetCookie
+        $ def
+          { setCookieName = Config.authCookie c
+          , setCookieValue = bytes
+          , setCookieHttpOnly = True
+          }
+      )
 
-newToken :: IO T.Text
-newToken = T.pack . take tokenLength . randomRs ('A', 'Z') <$> newStdGen
-
-setCookie :: ByteString -> ByteString -> Header
-setCookie n v =
-  ( "Set-Cookie"
-  , toStrict
-    . toLazyByteString
-    . renderSetCookie
-    $ def { setCookieName = n, setCookieValue = v, setCookieHttpOnly = True }
-  )
-
-new :: Config.T -> CS.Key -> IO (T, [Header])
-new c k = do
-  session <- Session <$> pure Nothing <*> getCurrentTime <*> newToken
-  cookieBytes <- CS.encryptIO k . toStrict $ encode session
-  return (session, [setCookie (Config.authCookie c) cookieBytes])
+new :: IO T
+new = Session Nothing Nothing Nothing <$> getCurrentTime
 

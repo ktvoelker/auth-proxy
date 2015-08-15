@@ -24,9 +24,10 @@ instance FromJSON EmailAddress where
 
 data T =
   Session
-  { email   :: Maybe EmailAddress
-  , created :: UTCTime
-  , token   :: T.Text
+  { token           :: Maybe T.Text
+  , verifiedEmail   :: Maybe EmailAddress
+  , unverifiedEmail :: Maybe (T.Text, EmailAddress)
+  , created         :: UTCTime
   } deriving (Eq, Ord)
 
 deriveJSON defaultOptions ''T
