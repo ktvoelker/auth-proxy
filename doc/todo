@@ -3,18 +3,14 @@ TODO
 ====
 
 Refactor all the ugly, repetitive code, especially in the Authenticate module
-
-  Make a distinct ConfigFile type that is turned into a Config in a separate step
-
-    This step should run in IO so that keys can be loaded.
   
-  Generate lenses for Session and Config
+  Generate lenses for Config
 
-  Generate getters for parts of Request
+  Put the Config and Request in a Reader monad
 
   Write convenient lenses for switching around between text and (lazy-)bytestrings
 
-  Put the Config and Request in a Reader monad
+  Generate getters for parts of Request
 
   Put the Session in a State monad
 

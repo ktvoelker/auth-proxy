@@ -1,7 +1,10 @@
 
 {-# LANGUAGE TemplateHaskell #-}
-module Session.Types where
+module Session.Types
+  ( T(), new, created, token, unverifiedEmail, verifiedEmail
+  ) where
 
+import Control.Lens
 import Control.Monad
 import Data.Aeson
 import Data.Aeson.TH
@@ -24,11 +27,16 @@ instance FromJSON EmailAddress where
 
 data T =
   Session
-  { token           :: Maybe T.Text
-  , verifiedEmail   :: Maybe EmailAddress
-  , unverifiedEmail :: Maybe (T.Text, EmailAddress)
-  , created         :: UTCTime
+  { _token           :: Maybe T.Text
+  , _verifiedEmail   :: Maybe EmailAddress
+  , _unverifiedEmail :: Maybe (T.Text, EmailAddress)
+  , _created         :: UTCTime
   } deriving (Eq, Ord)
 
+new :: IO T
+new = Session Nothing Nothing Nothing <$> getCurrentTime
+
 deriveJSON defaultOptions ''T
+
+makeLenses ''T
 

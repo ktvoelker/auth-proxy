@@ -1,11 +1,14 @@
 
-module Session (T(..), loadKey, authenticated, get, new, setCookie, emailOK) where
+module Session
+  ( T(), new, created, token, unverifiedEmail, verifiedEmail
+  , authenticated, get, setCookie, emailOK
+  ) where
 
+import Control.Lens
 import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Lazy (fromStrict, toStrict)
-import Data.Time.Clock
 import Network.HTTP.Types
 import Network.Wai
 import Text.Email.Validate
@@ -14,9 +17,6 @@ import Web.Cookie
 
 import qualified Config
 import Session.Types
-
-loadKey :: Config.T -> IO CS.Key
-loadKey = CS.getKey . Config.authKeyFile
 
 parseRequestCookies :: Request -> [(ByteString, ByteString)]
 parseRequestCookies =
@@ -27,18 +27,18 @@ parseRequestCookies =
 emailOK :: Config.T -> EmailAddress -> Bool
 emailOK c = (== Config.authEmailDomain c) . domainPart
 
-authenticated :: Config.T -> CS.Key -> Request -> Bool
-authenticated c key req = maybe False (emailOK c) $ get c key req >>= verifiedEmail
+authenticated :: Config.T -> Request -> Bool
+authenticated c req = maybe False (emailOK c) $ get c req >>= view verifiedEmail
 
-get :: Config.T -> CS.Key -> Request -> Maybe T
-get c key req =
+get :: Config.T -> Request -> Maybe T
+get c req =
   lookup (Config.authCookie c) (parseRequestCookies req)
-  >>= CS.decrypt key
+  >>= CS.decrypt (Config.authKey c)
   >>= decode . fromStrict
 
-setCookie :: Config.T -> CS.Key -> T -> IO Header
-setCookie c k session = do
-  bytes <- CS.encryptIO k . toStrict $ encode session
+setCookie :: Config.T -> T -> IO Header
+setCookie c session = do
+  bytes <- CS.encryptIO (Config.authKey c) . toStrict $ encode session
   return
     $ ( "Set-Cookie"
       , toStrict
@@ -50,7 +50,4 @@ setCookie c k session = do
           , setCookieHttpOnly = True
           }
       )
-
-new :: IO T
-new = Session Nothing Nothing Nothing <$> getCurrentTime
 

@@ -28,10 +28,9 @@ app = waitraMiddleware routes . authApp
 
 authApp :: Config.T -> Application
 authApp config req respond = do
-  key <- Session.loadKey config
-  if Session.authenticated config key req
+  if Session.authenticated config req
   then Proxy.app config req respond
-  else Authenticate.app config key req respond
+  else Authenticate.app config req respond
 
 routes :: [Route]
 routes =
