@@ -2,18 +2,15 @@
 TODO
 ====
 
+Deploy to a real server with SSL via haproxy
+
 Set the secure bit on the client cookie
 
 Add a config entry indicating where to redirect after a successful login
 
 Make all tokens time-limited
 
-Deploy to a real server with SSL via haproxy
-
 Add a custom stylesheet option
 
-Add a mode where we don't proxy at all, but instead redirect to an external service
-that takes the authentication claim as a query parameter.
-
-Make the path prefix of the authentication routes configurable
+Add a mode where we redirect externally instead of proxying
 

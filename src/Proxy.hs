@@ -34,6 +34,6 @@ newApp conf =
 addClaim :: Config.T -> EmailAddress -> Request -> IO Request
 addClaim conf email req = do
   claim <- Claim.assert conf email
-  let claimHeader = ("X-Authenticated-Email", claim)
+  let claimHeader = (Claim.headerName, claim)
   return $ req { requestHeaders = claimHeader : requestHeaders req }
 

@@ -1,17 +1,13 @@
 
-module Claim (assert, check) where
+module Claim (C.headerName, assert) where
 
 import Control.Lens
-import Control.Monad
-import qualified Data.ByteString as BS
-import Text.Email.Validate
-import qualified Web.ClientSession as CS
+import Data.ByteString (ByteString)
+import qualified Network.HTTP.AuthProxy.Claim as C
+import Text.Email.Validate (EmailAddress)
 
 import qualified Config
 
-assert :: Config.T -> EmailAddress -> IO BS.ByteString
-assert conf = CS.encryptIO (view Config.proxyKey conf) . toByteString
-
-check :: Config.T -> BS.ByteString -> Maybe EmailAddress
-check conf = CS.decrypt (view Config.proxyKey conf) >=> emailAddress
+assert :: Config.T -> EmailAddress -> IO ByteString
+assert = C.assert . view Config.proxyKey
 
