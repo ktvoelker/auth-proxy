@@ -23,6 +23,7 @@ executable auth-proxy
   other-modules:
     Authenticate
     Config
+    Config.File
     Email
     HTML
     Paths_auth_proxy
