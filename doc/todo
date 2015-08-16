@@ -2,7 +2,7 @@
 TODO
 ====
 
-Add /auth/check and /auth/logout routes
+Add /auth/logout route
 
 Add a signed header when proxying that indicates the client's verified email
 

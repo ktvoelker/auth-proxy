@@ -3,6 +3,8 @@
 module Monad.Types where
 
 import Control.Lens
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -20,9 +22,20 @@ data ErrorType = BadRequest | Forbidden | NotFound | Unknown
 
 type Uri = T.Text
 
+data ContentType =
+    ContentTypePlainText
+  | ContentTypeHTML
+  deriving (Eq, Ord, Show)
+
+data Content =
+    TextContent T.Text
+  | ByteStringContent BS.ByteString
+  | LazyByteStringContent LBS.ByteString
+  deriving (Eq, Ord, Show)
+
 data Success =
     NoContent
-  | Success SuccessType T.Text
+  | Success SuccessType ContentType Content
   | Redirect RedirectType Uri
   deriving (Eq, Ord, Show)
 

@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Config
   ( T(), serverUrl, serverPort, proxyHost, proxyPort, proxyKey
-  , postmarkKey, postmarkSender, authCookie, authKey, authEmailDomain, authTitle
+  , postmarkKey, postmarkSender, authCookie, authKey, authEmailDomain, authTitle, debug
   , load
   ) where
 
@@ -27,6 +27,7 @@ data T = Config
   , _authKey         :: CS.Key
   , _authEmailDomain :: ByteString
   , _authTitle       :: Text
+  , _debug           :: Bool
   } deriving (Eq)
 
 makeLenses ''T
@@ -48,6 +49,7 @@ upgrade f =
   <*> pk F.authKeyFile
   <*> pb F.authEmailDomain
   <*> pf F.authTitle
+  <*> pf F.debug
   where
     pf :: (F.T -> a) -> IO a
     pf = pure . ($ f)

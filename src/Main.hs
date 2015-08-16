@@ -7,6 +7,7 @@ import Network.HTTP.Types
 import Network.Wai
 import Network.Waitra
 import qualified Network.Wai.Handler.Warp as Warp
+import Network.Wai.Middleware.RequestLogger
 import System.Environment
 import System.Exit
 import System.IO
@@ -25,7 +26,10 @@ main = getArgs >>= \case
     exitFailure
 
 app :: Config.T -> Application
-app config = waitraMiddleware (routes <> Authenticate.routes config) (Proxy.app config)
+app config =
+  (if view Config.debug config then logStdoutDev else logStdout)
+  . waitraMiddleware (routes <> Authenticate.routes config)
+  $ Proxy.app config
 
 routes :: [Route]
 routes =

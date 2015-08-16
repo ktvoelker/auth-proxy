@@ -22,10 +22,17 @@ import qualified Token
 
 routes :: Config.T -> [Route]
 routes conf =
-  [ simpleGet  "/auth/login"  $ makeApp conf loginPage
+  [ simpleGet  "/auth/check"  $ makeApp conf check
+  , simpleGet  "/auth/login"  $ makeApp conf loginPage
   , simplePost "/auth/login"  $ makeApp conf login
   , simpleGet  "/auth/verify" $ makeApp conf verify
   ]
+
+check :: M Success
+check = use Session.verifiedEmail >>= \case
+  Nothing -> throwError $ Error Forbidden "Not authenticated."
+  Just email ->
+    return . Success OK ContentTypePlainText . ByteStringContent $ toByteString email
 
 loginPage :: M Success
 loginPage = do
@@ -38,7 +45,7 @@ loginPage = do
   title <- view $ config . Config.authTitle
   let args = [("__TITLE__", title), ("__TOKEN__", token)]
   pageText <- liftIO $ HTML.login >>= HTML.render args
-  return $ Success OK pageText
+  return . Success OK ContentTypeHTML $ TextContent pageText
 
 login :: M Success
 login = do
@@ -69,11 +76,11 @@ login = do
       { Email.to = decodeUtf8 $ toByteString email
       , Email.from = sender
       , Email.subject = "Your login link for " <> authTitle
-      , Email.textBody = serverUrl <> "/verify?token=" <> emailToken
+      , Email.textBody = serverUrl <> "/auth/verify?token=" <> emailToken
       }
   when (emailStatus /= 200)
     $ throwError $ Error Unknown "Failed to send email."
-  return $ Success OK "Check your email!"
+  return . Success OK ContentTypePlainText $ LazyByteStringContent "Check your email!"
 
 verify :: M Success
 verify = do

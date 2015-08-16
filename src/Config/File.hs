@@ -17,6 +17,7 @@ data T = ConfigFile
   , authKeyFile     :: FilePath
   , authEmailDomain :: Text
   , authTitle       :: Text
+  , debug           :: Bool
   } deriving (Eq, Ord)
 
 (..:) :: (FromJSON a) => Object -> (Text, Text) -> Parser a
@@ -36,6 +37,7 @@ instance FromJSON T where
       <*> v ..: ("authentication", "key-file")
       <*> v ..: ("authentication", "email-domain")
       <*> v ..: ("authentication", "title")
+      <*> v .:? "debug" .!= False
   parseJSON _ = mzero
 
 load :: FilePath -> IO T

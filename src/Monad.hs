@@ -1,15 +1,14 @@
 
 module Monad
-  ( Error(..), ErrorType(..), Uri, Success(..), SuccessType(..), RedirectType(..)
+  ( Error(..), ErrorType(..)
+  , Uri, ContentType(..), Content(..), Success(..), SuccessType(..), RedirectType(..)
   , Env(), config, request, M(), makeApp
   ) where
 
 import qualified Data.ByteString.Lazy as LBS
-import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.Maybe
 import Data.Monoid
 import Data.Text.Encoding
 import Network.HTTP.Types
@@ -37,28 +36,39 @@ errorCode = \case
 
 successCode :: Success -> Status
 successCode = \case
-  NoContent -> status204
-  Success ty _ -> case ty of
+  NoContent      -> status204
+  Success ty _ _ -> case ty of
     OK        -> status200
     Created _ -> status201
     Accepted  -> status202
-  Redirect ty _ -> case ty of
-    SeeOther -> status303
+  Redirect ty _  -> case ty of
+    SeeOther  -> status303
+
+contentTypeHeader :: ContentType -> Header
+contentTypeHeader = (hContentType,) . \case
+  ContentTypePlainText -> "text/plain"
+  ContentTypeHTML -> "text/html"
 
 successHeaders :: Success -> [Header]
 successHeaders = \case
-  NoContent -> []
-  Success ty _ -> [plainText] <> case ty of
+  NoContent       -> []
+  Success ty ct _ -> [contentTypeHeader ct] <> case ty of
     OK          -> []
     Created loc -> [(hLocation, encodeUtf8 loc)]
     Accepted    -> []
-  Redirect _ loc -> [(hLocation, encodeUtf8 loc)]
+  Redirect _ loc  -> [(hLocation, encodeUtf8 loc)]
+
+contentLazyByteString :: Content -> LBS.ByteString
+contentLazyByteString = \case
+  TextContent xs           -> LBS.fromStrict $ encodeUtf8 xs
+  ByteStringContent xs     -> LBS.fromStrict xs
+  LazyByteStringContent xs -> xs
 
 successBody :: Success -> LBS.ByteString
 successBody = \case
-  NoContent    -> ""
-  Success _ xs -> LBS.fromStrict $ encodeUtf8 xs
-  Redirect _ _ -> ""
+  NoContent     -> ""
+  Success _ _ c -> contentLazyByteString c
+  Redirect _ _  -> ""
 
 response :: Config.T -> Session.T -> Either Error (Success, Session.T) -> IO Response
 response conf origSession = \case
