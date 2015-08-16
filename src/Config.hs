@@ -8,7 +8,8 @@ import Data.Text.Encoding
 import Data.Yaml
 
 data T = Config
-  { serverPort      :: Int
+  { serverUrl       :: ByteString
+  , serverPort      :: Int
   , proxyHost       :: ByteString
   , proxyPort       :: Int
   , proxyKeyFile    :: FilePath
@@ -26,7 +27,8 @@ data T = Config
 instance FromJSON T where
   parseJSON (Object v) =
     Config
-      <$> v ..: ("server", "port")
+      <$> fmap encodeUtf8 (v ..: ("server", "url"))
+      <*> v ..: ("server", "port")
       <*> fmap encodeUtf8 (v ..: ("proxy", "host"))
       <*> v ..: ("proxy", "port")
       <*> v ..: ("proxy", "key-file")

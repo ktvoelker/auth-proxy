@@ -5,6 +5,8 @@ import Control.Monad
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy (fromStrict, toStrict)
 import Data.Maybe
+import Data.Monoid
+import qualified Data.Text as T
 import Data.Text.Encoding
 import Network.HTTP.Types
 import Network.Wai
@@ -26,7 +28,7 @@ app c k = waitraMiddleware routes redirectToLogin
     routes =
       [ simpleGet "/login" $ loginPage c k
       , simplePost "/login" $ login c k
-      , simplePost "/verify" $ verify c k
+      , simpleGet "/verify" $ verify c k
       ]
 
 redirectToLogin :: Application
@@ -69,6 +71,10 @@ login c k req respond = case Session.get c k req of
                 { Session.unverifiedEmail = Just (emailToken, email)
                 }
             setCookie <- Session.setCookie c k session'
+            let
+              verifyUri =
+                Config.serverUrl c <> "/verify?token=" <> encodeUtf8 emailToken
+            print verifyUri
             -- TODO send the verification email
             respond
               $ responseLBS
@@ -76,9 +82,22 @@ login c k req respond = case Session.get c k req of
                 [setCookie, plainText]
                 "Check your email!"
           _ -> respond $ responseLBS status400 [plainText] "Invalid domain."
-      tp -> respond $ responseLBS status400 [plainText] "Invalid token."
-    respond $ responseLBS status303 [(hLocation, "/")] ""
+      _ -> respond $ responseLBS status400 [plainText] "Invalid token."
 
 verify :: Config.T -> Key -> Application
-verify = undefined
+verify c k req respond = case Session.get c k req of
+  Nothing -> respond $ responseLBS status403 [] ""
+  Just session -> do
+    let args = queryString req
+    case (decodeUtf8 <$> join (lookup "token" args), Session.unverifiedEmail session) of
+      (Just actualToken, Just (expectedToken, unverifiedEmail))
+        | actualToken == expectedToken && Session.emailOK c unverifiedEmail -> do
+          let
+            session' = session
+              { Session.verifiedEmail = Just unverifiedEmail
+              , Session.unverifiedEmail = Nothing
+              }
+          setCookie <- Session.setCookie c k session'
+          respond $ responseLBS status303 [setCookie, (hLocation, "/")] ""
+      _ -> respond $ responseLBS status403 [] ""
 

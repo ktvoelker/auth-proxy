@@ -2,8 +2,6 @@
 TODO
 ====
 
-Write the endpoint linked to by the email
-
 Actually send the email
 
 Add /check-login and /logout routes to the authenticated branch
