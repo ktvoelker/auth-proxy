@@ -2,8 +2,6 @@
 TODO
 ====
 
-Actually send the email
-
 Add /check-login and /logout routes to the authenticated branch
 
 Add a signed header when proxying that indicates the client's verified email
@@ -11,4 +9,6 @@ Add a signed header when proxying that indicates the client's verified email
 Set the secure bit on the client cookie
 
 Add a config entry indicating where to redirect after a successful login
+
+Make all tokens time-limited
 

@@ -5,13 +5,9 @@ import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Lazy (fromStrict, toStrict)
-import Data.Maybe
-import qualified Data.Text as T
 import Data.Time.Clock
 import Network.HTTP.Types
 import Network.Wai
-import System.Random
-import System.Random.TF
 import Text.Email.Validate
 import qualified Web.ClientSession as CS
 import Web.Cookie

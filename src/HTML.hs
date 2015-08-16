@@ -17,5 +17,5 @@ render args fp = renderText args <$> readFile fp
 renderText :: [(Text, Text)] -> Text -> Text
 renderText args xs = foldl f xs args
   where
-    f xs (key, val) = T.replace key val xs
+    f xs' (key, val) = T.replace key val xs'
 

@@ -2,11 +2,8 @@
 module Authenticate (app) where
 
 import Control.Monad
-import Data.ByteString (ByteString)
 import Data.ByteString.Lazy (fromStrict, toStrict)
-import Data.Maybe
 import Data.Monoid
-import qualified Data.Text as T
 import Data.Text.Encoding
 import Network.HTTP.Types
 import Network.Wai
@@ -15,6 +12,7 @@ import Text.Email.Validate
 import Web.ClientSession (Key)
 
 import qualified Config
+import qualified Email
 import qualified HTML
 import qualified Session
 import qualified Token
@@ -71,16 +69,20 @@ login c k req respond = case Session.get c k req of
                 { Session.unverifiedEmail = Just (emailToken, email)
                 }
             setCookie <- Session.setCookie c k session'
-            let
-              verifyUri =
-                Config.serverUrl c <> "/verify?token=" <> encodeUtf8 emailToken
-            print verifyUri
-            -- TODO send the verification email
-            respond
-              $ responseLBS
-                status200
-                [setCookie, plainText]
-                "Check your email!"
+            emailStatus <- Email.send c
+              $ Email.Email
+                { Email.to = decodeUtf8 $ toByteString email
+                , Email.from = Config.postmarkSender c
+                , Email.subject = "Your login link for " <> Config.authTitle c
+                , Email.textBody = Config.serverUrl c <> "/verify?token=" <> emailToken
+                }
+            case emailStatus of
+              200 -> respond
+                $ responseLBS
+                  status200
+                  [setCookie, plainText]
+                  "Check your email!"
+              _ -> respond $ responseLBS status500 [plainText] "Failed to send email."
           _ -> respond $ responseLBS status400 [plainText] "Invalid domain."
       _ -> respond $ responseLBS status400 [plainText] "Invalid token."
 
