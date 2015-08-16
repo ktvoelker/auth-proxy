@@ -1,6 +1,12 @@
 
-module Config (T(..), load) where
+{-# LANGUAGE TemplateHaskell #-}
+module Config
+  ( T(), serverUrl, serverPort, proxyHost, proxyPort, proxyKey
+  , postmarkKey, postmarkSender, authCookie, authKey, authEmailDomain, authTitle
+  , load
+  ) where
 
+import Control.Lens
 import Control.Monad
 import Data.ByteString
 import Data.Text
@@ -10,18 +16,20 @@ import qualified Web.ClientSession as CS
 import qualified Config.File as F
 
 data T = Config
-  { serverUrl       :: Text
-  , serverPort      :: Int
-  , proxyHost       :: ByteString
-  , proxyPort       :: Int
-  , proxyKey        :: CS.Key
-  , postmarkKey     :: ByteString
-  , postmarkSender  :: Text
-  , authCookie      :: ByteString
-  , authKey         :: CS.Key
-  , authEmailDomain :: ByteString
-  , authTitle       :: Text
+  { _serverUrl       :: Text
+  , _serverPort      :: Int
+  , _proxyHost       :: ByteString
+  , _proxyPort       :: Int
+  , _proxyKey        :: CS.Key
+  , _postmarkKey     :: ByteString
+  , _postmarkSender  :: Text
+  , _authCookie      :: ByteString
+  , _authKey         :: CS.Key
+  , _authEmailDomain :: ByteString
+  , _authTitle       :: Text
   } deriving (Eq)
+
+makeLenses ''T
 
 load :: FilePath -> IO T
 load = F.load >=> upgrade

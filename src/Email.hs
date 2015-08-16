@@ -28,7 +28,7 @@ instance ToJSON T where
 
 opts :: Config.T -> Options
 opts c =
-  set (header "X-Postmark-Server-Token") [Config.postmarkKey c]
+  set (header "X-Postmark-Server-Token") [view Config.postmarkKey c]
   . set (header "Accept") ["application/json"]
   . set (header "Content-Type") ["application/json"]
   . set checkStatus Nothing

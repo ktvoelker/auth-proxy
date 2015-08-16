@@ -1,6 +1,7 @@
 
 module Main where
 
+import Control.Lens
 import Network.HTTP.Types
 import Network.Wai
 import Network.Waitra
@@ -18,7 +19,7 @@ main :: IO ()
 main = getArgs >>= \case
   [configPath] -> do
     config <- Config.load configPath
-    Warp.run (Config.serverPort config) $ app config
+    Warp.run (view Config.serverPort config) $ app config
   _ -> do
     hPutStrLn stderr "Usage: auth-proxy CONFIG_FILE"
     exitFailure

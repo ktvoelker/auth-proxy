@@ -59,4 +59,6 @@ executable auth-proxy
     OverloadedStrings
     RecordWildCards
     TupleSections
+  other-extensions:
+    TemplateHaskell
 

@@ -3,8 +3,6 @@ TODO
 ====
 
 Refactor all the ugly, repetitive code, especially in the Authenticate module
-  
-  Generate lenses for Config
 
   Put the Config and Request in a Reader monad
 

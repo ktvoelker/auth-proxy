@@ -25,27 +25,27 @@ parseRequestCookies =
   . requestHeaders
 
 emailOK :: Config.T -> EmailAddress -> Bool
-emailOK c = (== Config.authEmailDomain c) . domainPart
+emailOK c = (== view Config.authEmailDomain c) . domainPart
 
 authenticated :: Config.T -> Request -> Bool
 authenticated c req = maybe False (emailOK c) $ get c req >>= view verifiedEmail
 
 get :: Config.T -> Request -> Maybe T
 get c req =
-  lookup (Config.authCookie c) (parseRequestCookies req)
-  >>= CS.decrypt (Config.authKey c)
+  lookup (view Config.authCookie c) (parseRequestCookies req)
+  >>= CS.decrypt (view Config.authKey c)
   >>= decode . fromStrict
 
 setCookie :: Config.T -> T -> IO Header
 setCookie c session = do
-  bytes <- CS.encryptIO (Config.authKey c) . toStrict $ encode session
+  bytes <- CS.encryptIO (view Config.authKey c) . toStrict $ encode session
   return
     $ ( "Set-Cookie"
       , toStrict
         . toLazyByteString
         . renderSetCookie
         $ def
-          { setCookieName = Config.authCookie c
+          { setCookieName = view Config.authCookie c
           , setCookieValue = bytes
           , setCookieHttpOnly = True
           }

@@ -1,6 +1,7 @@
 
 module Proxy (app) where
 
+import Control.Lens
 import Network.HTTP.Client
 import Network.HTTP.ReverseProxy
 import Network.Wai
@@ -8,7 +9,7 @@ import Network.Wai
 import qualified Config
 
 proxyDest :: Config.T -> ProxyDest
-proxyDest c = ProxyDest (Config.proxyHost c) (Config.proxyPort c)
+proxyDest c = ProxyDest (view Config.proxyHost c) (view Config.proxyPort c)
 
 app :: Config.T -> Application
 app c req respond = do

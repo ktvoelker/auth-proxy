@@ -47,7 +47,7 @@ loginPage c req respond = do
     else (: []) <$> Session.setCookie c session'
   let
     args =
-      [ ("__TITLE__", Config.authTitle c)
+      [ ("__TITLE__", view Config.authTitle c)
       , ("__TOKEN__", token)
       ]
   pageText <- HTML.login >>= HTML.render args
@@ -70,9 +70,10 @@ login c req respond = case Session.get c req of
             emailStatus <- Email.send c
               $ Email.Email
                 { Email.to = decodeUtf8 $ toByteString email
-                , Email.from = Config.postmarkSender c
-                , Email.subject = "Your login link for " <> Config.authTitle c
-                , Email.textBody = Config.serverUrl c <> "/verify?token=" <> emailToken
+                , Email.from = view Config.postmarkSender c
+                , Email.subject = "Your login link for " <> view Config.authTitle c
+                , Email.textBody
+                  = view Config.serverUrl c <> "/verify?token=" <> emailToken
                 }
             case emailStatus of
               200 -> respond
