@@ -2,8 +2,6 @@
 TODO
 ====
 
-Add /auth/logout route
-
 Add a signed header when proxying that indicates the client's verified email
 
 Set the secure bit on the client cookie

@@ -4,6 +4,7 @@ module Authenticate (routes) where
 import Control.Lens
 import Control.Monad
 import Control.Monad.Except
+import Control.Monad.State
 import Data.ByteString.Lazy (toStrict)
 import Data.Maybe
 import Data.Monoid
@@ -25,6 +26,7 @@ routes conf =
   [ simpleGet  "/auth/check"  $ makeApp conf check
   , simpleGet  "/auth/login"  $ makeApp conf loginPage
   , simplePost "/auth/login"  $ makeApp conf login
+  , simpleGet  "/auth/logout" $ makeApp conf logout
   , simpleGet  "/auth/verify" $ makeApp conf verify
   ]
 
@@ -33,6 +35,11 @@ check = use Session.verifiedEmail >>= \case
   Nothing -> throwError $ Error Forbidden "Not authenticated."
   Just email ->
     return . Success OK ContentTypePlainText . ByteStringContent $ toByteString email
+
+logout :: M Success
+logout = use Session.verifiedEmail >>= \case
+  Nothing -> throwError $ Error Forbidden "Not authenticated."
+  Just _ -> liftIO Session.new >>= put >> return (Redirect SeeOther "/auth/login")
 
 loginPage :: M Success
 loginPage = do
