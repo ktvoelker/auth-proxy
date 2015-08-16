@@ -2,6 +2,7 @@
 module Main where
 
 import Control.Lens
+import Data.Monoid
 import Network.HTTP.Types
 import Network.Wai
 import Network.Waitra
@@ -13,7 +14,6 @@ import System.IO
 import qualified Authenticate
 import qualified Config
 import qualified Proxy
-import qualified Session
 
 main :: IO ()
 main = getArgs >>= \case
@@ -25,13 +25,7 @@ main = getArgs >>= \case
     exitFailure
 
 app :: Config.T -> Application
-app = waitraMiddleware routes . authApp
-
-authApp :: Config.T -> Application
-authApp config req respond = do
-  if Session.authenticated config req
-  then Proxy.app config req respond
-  else Authenticate.app config req respond
+app config = waitraMiddleware (routes <> Authenticate.routes config) (Proxy.app config)
 
 routes :: [Route]
 routes =

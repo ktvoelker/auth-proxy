@@ -2,14 +2,7 @@
 TODO
 ====
 
-Don't refuse to proxy just due to lack of authentication; instead, proxy all
-non-reserved paths, but just don't make an authentication claim in the headers if
-there is no authenticated user.
-
-  Basically, the authentication routes should be pulled up to the top level,
-  and proxying should become the default.
-
-Add /check-login and /logout routes to the authenticated branch
+Add /auth/check and /auth/logout routes
 
 Add a signed header when proxying that indicates the client's verified email
 
@@ -22,4 +15,9 @@ Make all tokens time-limited
 Deploy to a real server with SSL via haproxy
 
 Add a custom stylesheet option
+
+Add a mode where we don't proxy at all, but instead redirect to an external service
+that takes the authentication claim as a query parameter.
+
+Make the path prefix of the authentication routes configurable
 

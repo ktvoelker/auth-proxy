@@ -1,5 +1,5 @@
 
-module Authenticate (app) where
+module Authenticate (routes) where
 
 import Control.Lens
 import Control.Monad
@@ -20,17 +20,12 @@ import Monad
 import qualified Session
 import qualified Token
 
-app :: Config.T -> Application
-app conf = waitraMiddleware routes (makeApp conf redirectToLogin)
-  where
-    routes =
-      [ simpleGet  "/login"  $ makeApp conf loginPage
-      , simplePost "/login"  $ makeApp conf login
-      , simpleGet  "/verify" $ makeApp conf verify
-      ]
-
-redirectToLogin :: M Success
-redirectToLogin = return $ Redirect SeeOther "/login"
+routes :: Config.T -> [Route]
+routes conf =
+  [ simpleGet  "/auth/login"  $ makeApp conf loginPage
+  , simplePost "/auth/login"  $ makeApp conf login
+  , simpleGet  "/auth/verify" $ makeApp conf verify
+  ]
 
 loginPage :: M Success
 loginPage = do
