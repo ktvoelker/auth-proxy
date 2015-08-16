@@ -1,6 +1,7 @@
 
 module Network.HTTP.AuthProxy.Claim
-  ( headerName, assert, check, Options(..), defaultOptions, checkMiddleware
+  ( CS.getKey, CS.Key
+  , headerName, assert, check, Options(..), defaultOptions, checkMiddleware
   ) where
 
 import Control.Monad

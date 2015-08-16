@@ -2,6 +2,8 @@
 TODO
 ====
 
+Split the library component into a separate cabal package
+
 Deploy to a real server with SSL via haproxy
 
 Set the secure bit on the client cookie
