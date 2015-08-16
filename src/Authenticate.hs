@@ -14,6 +14,7 @@ import Text.Email.Validate
 import qualified Config
 import qualified Email
 import qualified HTML
+import Monad
 import qualified Session
 import qualified Token
 

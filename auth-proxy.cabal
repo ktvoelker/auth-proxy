@@ -26,6 +26,8 @@ executable auth-proxy
     Config.File
     Email
     HTML
+    Monad
+    Monad.Types
     Paths_auth_proxy
     Proxy
     Session
@@ -42,6 +44,7 @@ executable auth-proxy
     http-reverse-proxy,
     http-types,
     lens,
+    mtl,
     random,
     regex-applicative,
     text,
@@ -55,6 +58,7 @@ executable auth-proxy
     yaml
   default-language:    Haskell2010
   default-extensions:    
+    GeneralizedNewtypeDeriving
     LambdaCase
     OverloadedStrings
     RecordWildCards
