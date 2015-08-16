@@ -10,7 +10,6 @@ import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Lazy (fromStrict, toStrict)
 import Network.HTTP.Types
 import Network.Wai
-import Text.Email.Validate
 import qualified Web.ClientSession as CS
 import Web.Cookie
 
@@ -41,6 +40,7 @@ setCookie c session = do
           { setCookieName = view Config.authCookie c
           , setCookieValue = bytes
           , setCookieHttpOnly = True
+          , setCookiePath = Just "/"
           }
       )
 
