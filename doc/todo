@@ -2,6 +2,31 @@
 TODO
 ====
 
+Refactor all the ugly, repetitive code, especially in the Authenticate module
+
+  Make a distinct ConfigFile type that is turned into a Config in a separate step
+
+    This step should run in IO so that keys can be loaded.
+  
+  Generate lenses for Session and Config
+
+  Generate getters for parts of Request
+
+  Write convenient lenses for switching around between text and (lazy-)bytestrings
+
+  Put the Config and Request in a Reader monad
+
+  Put the Session in a State monad
+
+  Raise errors via exceptions
+
+Don't refuse to proxy just due to lack of authentication; instead, proxy all
+non-reserved paths, but just don't make an authentication claim in the headers if
+there is no authenticated user.
+
+  Basically, the authentication routes should be pulled up to the top level,
+  and proxying should become the default.
+
 Add /check-login and /logout routes to the authenticated branch
 
 Add a signed header when proxying that indicates the client's verified email
@@ -11,4 +36,8 @@ Set the secure bit on the client cookie
 Add a config entry indicating where to redirect after a successful login
 
 Make all tokens time-limited
+
+Deploy to a real server with SSL via haproxy
+
+Add a custom stylesheet option
 
