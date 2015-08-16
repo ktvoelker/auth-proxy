@@ -22,6 +22,7 @@ executable auth-proxy
     -fno-warn-orphans
   other-modules:
     Authenticate
+    Claim
     Config
     Config.File
     Email
@@ -33,6 +34,7 @@ executable auth-proxy
     Session
     Session.Types
     Token
+    Validate
   build-depends:
     aeson,
     base >= 4.8 && < 4.9,

@@ -18,18 +18,19 @@ import qualified Proxy
 
 main :: IO ()
 main = getArgs >>= \case
-  [configPath] -> do
-    config <- Config.load configPath
-    Warp.run (view Config.serverPort config) $ app config
+  [confPath] -> do
+    conf <- Config.load confPath
+    newApp conf >>= Warp.run (view Config.serverPort conf)
   _ -> do
     hPutStrLn stderr "Usage: auth-proxy CONFIG_FILE"
     exitFailure
 
-app :: Config.T -> Application
-app config =
-  (if view Config.debug config then logStdoutDev else logStdout)
-  . waitraMiddleware (routes <> Authenticate.routes config)
-  $ Proxy.app config
+newApp :: Config.T -> IO Application
+newApp conf =
+  logger . waitraMiddleware (routes <> Authenticate.routes conf)
+  <$> Proxy.newApp conf 
+  where
+    logger = if view Config.debug conf then logStdoutDev else logStdout
 
 routes :: [Route]
 routes =

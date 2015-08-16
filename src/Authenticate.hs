@@ -54,6 +54,11 @@ loginPage = do
   pageText <- liftIO $ HTML.login >>= HTML.render args
   return . Success OK ContentTypeHTML $ TextContent pageText
 
+checkEmail :: EmailAddress -> ErrorType -> M ()
+checkEmail email et =
+  fmap not (emailOK email)
+  >>= flip when (throwError $ Error et "Invalid email domain.")
+
 login :: M Success
 login = do
   -- TODO this should probably be a "framework" feature
@@ -67,12 +72,10 @@ login = do
   email <- case join (lookup "email" args) >>= emailAddress of
     Nothing -> throwError $ Error BadRequest "Missing email."
     Just email -> return email
-  conf <- view config
-  -- TODO move emailOK into the monad M (and does it belong in Session?)
-  when (not $ Session.emailOK conf email)
-    $ throwError $ Error BadRequest "Invalid email domain."
+  checkEmail email BadRequest
   emailToken <- liftIO Token.new
   assign Session.unverifiedEmail $ Just (emailToken, email)
+  conf <- view config
   sender <- view $ config . Config.postmarkSender
   authTitle <- view $ config . Config.authTitle
   serverUrl <- view $ config . Config.serverUrl
@@ -98,9 +101,7 @@ verify = do
   (expectedToken, unverifiedEmail) <- use Session.unverifiedEmail >>= \case
     Nothing -> throwError $ Error Forbidden "Invalid session."
     Just p -> return p
-  conf <- view config
-  when (not $ Session.emailOK conf unverifiedEmail)
-    $ throwError $ Error Forbidden "Invalid email."
+  checkEmail unverifiedEmail Forbidden
   when (actualToken /= expectedToken)
     $ throwError $ Error Forbidden "Invalid session."
   assign Session.unverifiedEmail Nothing

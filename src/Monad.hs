@@ -2,21 +2,24 @@
 module Monad
   ( Error(..), ErrorType(..)
   , Uri, ContentType(..), Content(..), Success(..), SuccessType(..), RedirectType(..)
-  , Env(), config, request, M(), makeApp
+  , Env(), config, request, M(), makeApp, emailOK
   ) where
 
-import qualified Data.ByteString.Lazy as LBS
+import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
+import qualified Data.ByteString.Lazy as LBS
 import Data.Monoid
 import Data.Text.Encoding
 import Network.HTTP.Types
 import Network.Wai
+import Text.Email.Validate
 
 import qualified Config
 import Monad.Types
 import qualified Session
+import qualified Validate
 
 plainText :: Header
 plainText = (hContentType, "text/plain")
@@ -84,4 +87,7 @@ response conf origSession = \case
 successResponse :: Success -> [Header] -> Response
 successResponse s hs =
   responseLBS (successCode s) (hs <> successHeaders s) (successBody s)
+
+emailOK :: EmailAddress -> M Bool
+emailOK email = flip Validate.emailOK email <$> view config
 

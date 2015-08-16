@@ -1,7 +1,6 @@
 
 module Session
-  ( T(), new, created, token, unverifiedEmail, verifiedEmail
-  , authenticated, get, setCookie, emailOK
+  ( T(), new, created, token, unverifiedEmail, verifiedEmail, get, setCookie
   ) where
 
 import Control.Lens
@@ -23,12 +22,6 @@ parseRequestCookies =
   concatMap (parseCookies . snd)
   . filter ((== hCookie) . fst)
   . requestHeaders
-
-emailOK :: Config.T -> EmailAddress -> Bool
-emailOK c = (== view Config.authEmailDomain c) . domainPart
-
-authenticated :: Config.T -> Request -> Bool
-authenticated c req = maybe False (emailOK c) $ get c req >>= view verifiedEmail
 
 get :: Config.T -> Request -> Maybe T
 get c req =
