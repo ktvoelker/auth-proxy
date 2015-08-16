@@ -3,7 +3,9 @@ module Authenticate (app) where
 
 import Control.Lens
 import Control.Monad
-import Data.ByteString.Lazy (fromStrict, toStrict)
+import Control.Monad.Except
+import Data.ByteString.Lazy (toStrict)
+import Data.Maybe
 import Data.Monoid
 import Data.Text.Encoding
 import Network.HTTP.Types
@@ -18,89 +20,81 @@ import Monad
 import qualified Session
 import qualified Token
 
-plainText :: Header
-plainText = (hContentType, "text/plain")
-
 app :: Config.T -> Application
-app c = waitraMiddleware routes redirectToLogin
+app conf = waitraMiddleware routes (makeApp conf redirectToLogin)
   where
     routes =
-      [ simpleGet "/login" $ loginPage c
-      , simplePost "/login" $ login c
-      , simpleGet "/verify" $ verify c
+      [ simpleGet  "/login"  $ makeApp conf loginPage
+      , simplePost "/login"  $ makeApp conf login
+      , simpleGet  "/verify" $ makeApp conf verify
       ]
 
-redirectToLogin :: Application
-redirectToLogin = const ($ responseLBS status303 [(hLocation, "/login")] "")
+redirectToLogin :: M Success
+redirectToLogin = return $ Redirect SeeOther "/login"
 
-loginPage :: Config.T -> Application
-loginPage c req respond = do
-  session <- maybe Session.new return $ Session.get c req
-  (token, session') <- case view Session.token session of
-    Just t -> return (t, session)
+loginPage :: M Success
+loginPage = do
+  token <- use Session.token >>= \case
+    Just token -> return token
     Nothing -> do
-      t <- Token.new
-      let session' = set Session.token (Just t) session
-      return (t, session')
-  setCookie <-
-    if session == session'
-    then return []
-    else (: []) <$> Session.setCookie c session'
-  let
-    args =
-      [ ("__TITLE__", view Config.authTitle c)
-      , ("__TOKEN__", token)
-      ]
-  pageText <- HTML.login >>= HTML.render args
-  respond . responseLBS status200 setCookie . fromStrict $ encodeUtf8 pageText
+      token <- liftIO Token.new
+      assign Session.token $ Just token
+      return token
+  title <- view $ config . Config.authTitle
+  let args = [("__TITLE__", title), ("__TOKEN__", token)]
+  pageText <- liftIO $ HTML.login >>= HTML.render args
+  return $ Success OK pageText
 
-login :: Config.T -> Application
-login c req respond = case Session.get c req of
-  Nothing -> respond $ responseLBS status403 [] ""
-  Just session -> do
-    args <- parseQuery . toStrict <$> strictRequestBody req
-    case (decodeUtf8 <$> join (lookup "token" args), view Session.token session) of
-      (Just actual, Just expected) | actual == expected -> do
-        case join (lookup "email" args) >>= emailAddress of
-          Just email | Session.emailOK c email -> do
-            emailToken <- Token.new
-            let
-              session' =
-                set Session.unverifiedEmail (Just (emailToken, email)) session
-            setCookie <- Session.setCookie c session'
-            emailStatus <- Email.send c
-              $ Email.Email
-                { Email.to = decodeUtf8 $ toByteString email
-                , Email.from = view Config.postmarkSender c
-                , Email.subject = "Your login link for " <> view Config.authTitle c
-                , Email.textBody
-                  = view Config.serverUrl c <> "/verify?token=" <> emailToken
-                }
-            case emailStatus of
-              200 -> respond
-                $ responseLBS
-                  status200
-                  [setCookie, plainText]
-                  "Check your email!"
-              _ -> respond $ responseLBS status500 [plainText] "Failed to send email."
-          _ -> respond $ responseLBS status400 [plainText] "Invalid domain."
-      _ -> respond $ responseLBS status400 [plainText] "Invalid token."
+login :: M Success
+login = do
+  -- TODO this should probably be a "framework" feature
+  args <- fmap (parseQuery . toStrict) $ view request >>= liftIO . strictRequestBody
+  let actualToken = decodeUtf8 <$> join (lookup "token" args)
+  when (isNothing actualToken)
+    $ throwError $ Error Forbidden "Missing token."
+  expectedToken <- use Session.token
+  when (actualToken /= expectedToken)
+    $ throwError $ Error Forbidden "Invalid token."
+  email <- case join (lookup "email" args) >>= emailAddress of
+    Nothing -> throwError $ Error BadRequest "Missing email."
+    Just email -> return email
+  conf <- view config
+  -- TODO move emailOK into the monad M (and does it belong in Session?)
+  when (not $ Session.emailOK conf email)
+    $ throwError $ Error BadRequest "Invalid email domain."
+  emailToken <- liftIO Token.new
+  assign Session.unverifiedEmail $ Just (emailToken, email)
+  sender <- view $ config . Config.postmarkSender
+  authTitle <- view $ config . Config.authTitle
+  serverUrl <- view $ config . Config.serverUrl
+  -- TODO move Email.send into the monad M
+  emailStatus <-
+    liftIO . Email.send conf
+    $ Email.Email
+      { Email.to = decodeUtf8 $ toByteString email
+      , Email.from = sender
+      , Email.subject = "Your login link for " <> authTitle
+      , Email.textBody = serverUrl <> "/verify?token=" <> emailToken
+      }
+  when (emailStatus /= 200)
+    $ throwError $ Error Unknown "Failed to send email."
+  return $ Success OK "Check your email!"
 
-verify :: Config.T -> Application
-verify c req respond = case Session.get c req of
-  Nothing -> respond $ responseLBS status403 [] ""
-  Just session -> do
-    let args = queryString req
-    let mActualToken = decodeUtf8 <$> join (lookup "token" args)
-    case (mActualToken, view Session.unverifiedEmail session) of
-      (Just actualToken, Just (expectedToken, unverifiedEmail))
-        | actualToken == expectedToken && Session.emailOK c unverifiedEmail -> do
-          let
-            session' =
-              set Session.verifiedEmail (Just unverifiedEmail)
-              . set Session.unverifiedEmail Nothing
-              $ session
-          setCookie <- Session.setCookie c session'
-          respond $ responseLBS status303 [setCookie, (hLocation, "/")] ""
-      _ -> respond $ responseLBS status403 [] ""
+verify :: M Success
+verify = do
+  args <- view $ request . to queryString
+  actualToken <- case decodeUtf8 <$> join (lookup "token" args) of
+    Nothing -> throwError $ Error BadRequest "Missing token."
+    Just token -> return token
+  (expectedToken, unverifiedEmail) <- use Session.unverifiedEmail >>= \case
+    Nothing -> throwError $ Error Forbidden "Invalid session."
+    Just p -> return p
+  conf <- view config
+  when (not $ Session.emailOK conf unverifiedEmail)
+    $ throwError $ Error Forbidden "Invalid email."
+  when (actualToken /= expectedToken)
+    $ throwError $ Error Forbidden "Invalid session."
+  assign Session.unverifiedEmail Nothing
+  assign Session.verifiedEmail $ Just unverifiedEmail
+  return $ Redirect SeeOther "/"
 

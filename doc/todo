@@ -2,14 +2,6 @@
 TODO
 ====
 
-Refactor all the ugly, repetitive code, especially in the Authenticate module
-
-  Convert the Authenticate module to use the Monad module
-
-  Write convenient lenses for switching around between text and (lazy-)bytestrings
-
-  Generate getters for parts of Request
-
 Don't refuse to proxy just due to lack of authentication; instead, proxy all
 non-reserved paths, but just don't make an authentication claim in the headers if
 there is no authenticated user.
