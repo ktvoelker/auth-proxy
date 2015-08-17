@@ -1,0 +1,6 @@
+flags: {}
+packages:
+- '.'
+- auth-claim/
+extra-deps: []
+resolver: nightly-2015-08-17
