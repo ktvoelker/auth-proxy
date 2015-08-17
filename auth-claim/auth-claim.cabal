@@ -1,0 +1,33 @@
+name:                auth-claim
+version:             0.1.0.0
+synopsis:            Decrypt and verify X-Authenticated-Email headers
+description:
+  This library simplifies the task of decrypting and verifying the
+  X-Authenticated-Email header sent by auth-proxy.
+license:             BSD3
+license-file:        LICENSE
+author:              Karl Voelker
+maintainer:          auth-claim@karlv.net
+copyright:           Copyright 2015 Karl Voelker
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  ghc-options:
+    -Wall
+  exposed-modules:
+    Network.HTTP.AuthProxy.Claim
+  build-depends:
+    base >= 4.8 && < 4.9,
+    bytestring,
+    clientsession,
+    email-validate,
+    http-types,
+    wai
+  default-extensions:
+    LambdaCase
+    OverloadedStrings
+    RecordWildCards
+    TupleSections
+
