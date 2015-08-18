@@ -16,11 +16,16 @@ import qualified Authenticate
 import qualified Config
 import qualified Proxy
 
+warpSettings :: Config.T -> Warp.Settings
+warpSettings conf =
+  Warp.setPort (view Config.serverPort conf)
+  $ Warp.setHost "127.0.0.1" Warp.defaultSettings
+
 main :: IO ()
 main = getArgs >>= \case
   [confPath] -> do
     conf <- Config.load confPath
-    newApp conf >>= Warp.run (view Config.serverPort conf)
+    newApp conf >>= Warp.runSettings (warpSettings conf)
   _ -> do
     hPutStrLn stderr "Usage: auth-proxy CONFIG_FILE"
     exitFailure
