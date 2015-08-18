@@ -2,8 +2,6 @@
 TODO
 ====
 
-Deploy to a real server
-
 Set the secure bit on the client cookie
 
 Add a config entry indicating where to redirect after a successful login
