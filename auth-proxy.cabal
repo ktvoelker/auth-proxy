@@ -63,6 +63,7 @@ executable auth-proxy
     time,
     vector,
     wai,
+    wai-cors,
     wai-extra,
     waitra,
     warp,

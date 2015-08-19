@@ -6,18 +6,19 @@ import Data.Text
 import Data.Yaml
 
 data T = ConfigFile
-  { serverUrl       :: Text
-  , serverPort      :: Int
-  , proxyHost       :: Text
-  , proxyPort       :: Int
-  , proxyKeyFile    :: FilePath
-  , postmarkKey     :: Text
-  , postmarkSender  :: Text
-  , authCookie      :: Text
-  , authKeyFile     :: FilePath
-  , authEmailDomain :: Text
-  , authTitle       :: Text
-  , debug           :: Bool
+  { serverUrl          :: Text
+  , serverPort         :: Int
+  , serverAllowOrigins :: [Text]
+  , proxyHost          :: Text
+  , proxyPort          :: Int
+  , proxyKeyFile       :: FilePath
+  , postmarkKey        :: Text
+  , postmarkSender     :: Text
+  , authCookie         :: Text
+  , authKeyFile        :: FilePath
+  , authEmailDomain    :: Text
+  , authTitle          :: Text
+  , debug              :: Bool
   } deriving (Eq, Ord)
 
 (..:) :: (FromJSON a) => Object -> (Text, Text) -> Parser a
@@ -28,6 +29,7 @@ instance FromJSON T where
     ConfigFile
       <$> v ..: ("server", "url")
       <*> v ..: ("server", "port")
+      <*> v ..: ("server", "allow-origins")
       <*> v ..: ("proxy", "host")
       <*> v ..: ("proxy", "port")
       <*> v ..: ("proxy", "key-file")

@@ -1,9 +1,10 @@
 
 {-# LANGUAGE TemplateHaskell #-}
 module Config
-  ( T(), serverUrl, serverPort, proxyHost, proxyPort, proxyKey
-  , postmarkKey, postmarkSender, authCookie, authKey, authEmailDomain, authTitle, debug
-  , load
+  ( T(), serverUrl, serverPort, serverAllowOrigins, proxyHost, proxyPort, proxyKey
+  , postmarkKey, postmarkSender
+  , authCookie, authKey, authEmailDomain, authTitle
+  , debug, load
   ) where
 
 import Control.Lens
@@ -16,18 +17,19 @@ import qualified Web.ClientSession as CS
 import qualified Config.File as F
 
 data T = Config
-  { _serverUrl       :: Text
-  , _serverPort      :: Int
-  , _proxyHost       :: ByteString
-  , _proxyPort       :: Int
-  , _proxyKey        :: CS.Key
-  , _postmarkKey     :: ByteString
-  , _postmarkSender  :: Text
-  , _authCookie      :: ByteString
-  , _authKey         :: CS.Key
-  , _authEmailDomain :: ByteString
-  , _authTitle       :: Text
-  , _debug           :: Bool
+  { _serverUrl          :: Text
+  , _serverPort         :: Int
+  , _serverAllowOrigins :: [ByteString]
+  , _proxyHost          :: ByteString
+  , _proxyPort          :: Int
+  , _proxyKey           :: CS.Key
+  , _postmarkKey        :: ByteString
+  , _postmarkSender     :: Text
+  , _authCookie         :: ByteString
+  , _authKey            :: CS.Key
+  , _authEmailDomain    :: ByteString
+  , _authTitle          :: Text
+  , _debug              :: Bool
   } deriving (Eq)
 
 makeLenses ''T
@@ -40,6 +42,7 @@ upgrade f =
   Config
   <$> pf F.serverUrl
   <*> pf F.serverPort
+  <*> pure (fmap encodeUtf8 $ F.serverAllowOrigins f)
   <*> pb F.proxyHost
   <*> pf F.proxyPort
   <*> pk F.proxyKeyFile
@@ -57,4 +60,6 @@ upgrade f =
     pb = (encodeUtf8 <$>) . pf
     pk :: (F.T -> FilePath) -> IO CS.Key
     pk = CS.getKey . ($ f)
+    pl :: (F.T -> [Text]) -> IO [ByteString]
+    pl = (fmap encodeUtf8 <$>) . pf
 
