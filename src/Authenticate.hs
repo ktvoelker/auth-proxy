@@ -41,6 +41,8 @@ logout = use Session.verifiedEmail >>= \case
   Nothing -> throwError $ Error Forbidden "Not authenticated."
   Just _ -> liftIO Session.new >>= put >> return (Redirect SeeOther "/auth/login")
 
+redirectFromArgs = maybe "/" decodeUtf8 . join . lookup "redirect" 
+
 loginPage :: M Success
 loginPage = do
   token <- use Session.token >>= \case
@@ -49,8 +51,10 @@ loginPage = do
       token <- liftIO Token.new
       assign Session.token $ Just token
       return token
+  args <- view $ request . to queryString
+  let redirect = redirectFromArgs args
   title <- view $ config . Config.authTitle
-  let args = [("__TITLE__", title), ("__TOKEN__", token)]
+  let args = [("__TITLE__", title), ("__TOKEN__", token), ("__REDIRECT__", redirect)]
   pageText <- liftIO $ HTML.login >>= HTML.render args
   return . Success OK ContentTypeHTML $ TextContent pageText
 
@@ -74,7 +78,8 @@ login = do
     Just email -> return email
   checkEmail email BadRequest
   emailToken <- liftIO Token.new
-  assign Session.unverifiedEmail $ Just (emailToken, email)
+  let redirect = redirectFromArgs args
+  assign Session.unverifiedEmail $ Just (emailToken, email, redirect)
   conf <- view config
   sender <- view $ config . Config.postmarkSender
   authTitle <- view $ config . Config.authTitle
@@ -98,7 +103,7 @@ verify = do
   actualToken <- case decodeUtf8 <$> join (lookup "token" args) of
     Nothing -> throwError $ Error BadRequest "Missing token."
     Just token -> return token
-  (expectedToken, unverifiedEmail) <- use Session.unverifiedEmail >>= \case
+  (expectedToken, unverifiedEmail, redirect) <- use Session.unverifiedEmail >>= \case
     Nothing -> throwError $ Error Forbidden "Invalid session."
     Just p -> return p
   checkEmail unverifiedEmail Forbidden
@@ -106,5 +111,5 @@ verify = do
     $ throwError $ Error Forbidden "Invalid session."
   assign Session.unverifiedEmail Nothing
   assign Session.verifiedEmail $ Just unverifiedEmail
-  return $ Redirect SeeOther "/"
+  return $ Redirect SeeOther redirect
 

@@ -2,12 +2,6 @@
 TODO
 ====
 
-Add support for an arbitrary redirect after verification
-
-  Accept a query arg in GET /login, embedded in the form so it comes back to
-  POST /login. On POST /login, save the redirect URI into the session. On GET
-  /verify, redirect to the stored URI.
-
 Set the secure bit on the client cookie
 
 Allow the config option for the email domain to be a list of domains

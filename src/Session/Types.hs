@@ -29,7 +29,7 @@ data T =
   Session
   { _token           :: Maybe T.Text
   , _verifiedEmail   :: Maybe EmailAddress
-  , _unverifiedEmail :: Maybe (T.Text, EmailAddress)
+  , _unverifiedEmail :: Maybe (T.Text, EmailAddress, T.Text)
   , _created         :: UTCTime
   } deriving (Eq, Ord)
 

@@ -8,6 +8,7 @@
     <h1>Login to __TITLE__</h1>
     <form action="/auth/login" method="POST">
       <input type="hidden" name="token" value="__TOKEN__">
+      <input type="hidden" name="redirect" value="__REDIRECT__">
       <p>
         <label for="email">Email:</label>
         <input type="email" name="email" id="email">
